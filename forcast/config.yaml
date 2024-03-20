@@ -1,14 +1,14 @@
 data:
-  _target_: tsa.dataset.TimeSeriesDataset
+  _target_: model.dataset.TimeSeriesDataset
   batch_size: 16
   categorical_cols: [ ]
   index_col: "Date_Time"
   target_col: [ "AH" ]
-  data_path: "../data/AirQualityUCI.csv"
+  data_path: "D:/CTIT-Synology/我的文件/SynologyDrive/CTIT-项目/横向项目/大型城市综合体/od_data_processed/caohejing_end_count.csv"
   prediction_window: 1
   seq_length: 3
   task:
-    _target_: tsa.dataset.Tasks
+    _target_: model.dataset.Tasks
     value: prediction
 
 training:
