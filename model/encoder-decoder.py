@@ -1,4 +1,3 @@
-
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -42,8 +41,7 @@ class Encoder(nn.Module):
         self.hidden_size = hidden_size_enc
         self.num_layers = num_layers_enc
         self.seq_len = seq_len
-        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers,
-                            batch_first=True)
+        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers)
 
     def forward(self, input_data: torch.Tensor):
         """
@@ -85,8 +83,7 @@ class Decoder(nn.Module):
             nn.Tanh(),
             nn.Linear(self.encoder_hidden_size, 1)
         )
-        self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers,
-                            batch_first=True)
+        self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers)
         self.fc = nn.Linear(self.encoder_hidden_size + self.out_feats, self.out_feats)
         self.fc_out = nn.Linear(self.decoder_hidden_size + self.encoder_hidden_size, self.out_feats)
         self.fc.weight.data.normal_()
@@ -150,6 +147,5 @@ class AutoEncForecast(nn.Module):
 
         _, encoder_output = self.encoder(encoder_input)
         outputs = self.decoder(encoder_output, y_hist.float())
-
 
         return outputs

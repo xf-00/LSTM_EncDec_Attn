@@ -26,7 +26,7 @@ def synthetic_data(Nt=2000, tf=80 * np.pi):
 
 
 def train_test_split(t, y, split=0.8):
-    '''
+    """
 
     split time series into train/test sets
 
@@ -36,7 +36,7 @@ def train_test_split(t, y, split=0.8):
     : return t_train, y_train:      time/feature training and test sets;
     :        t_test, y_test:        (shape: [# samples, 1])
 
-    '''
+    """
 
     indx_split = int(split * len(y))
     indx_train = np.arange(0, indx_split)
