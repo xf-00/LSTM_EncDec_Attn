@@ -123,8 +123,8 @@ class TimeSeriesDataset(object):
             unscaled = self.preprocessor.named_transformers_["scaler"].inverse_transform(predictions)
         return torch.Tensor(unscaled)
 
-
-if __name__ == '__main__':
-    data_path = 'D:/CTIT-Synology/我的文件/SynologyDrive/CTIT-项目/横向项目/大型城市综合体/od_data_processed/'
-    TimeSeriesDataset(task=Tasks.prediction, data_path=data_path + 'caohejing_end_count.csv', categorical_cols=['date'],
-                      index_col='index', target_col='count', seq_length=2, batch_size=20, prediction_window=1)
+#
+# if __name__ == '__main__':
+#     data_path = 'D:/CTIT-Synology/我的文件/SynologyDrive/CTIT-项目/横向项目/大型城市综合体/od_data_processed/'
+#     TimeSeriesDataset(task=Tasks.prediction, data_path=data_path + 'caohejing_end_count.csv', categorical_cols=['date'],
+#                       index_col='index', target_col='count', seq_length=2, batch_size=20, prediction_window=1)

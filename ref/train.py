@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from .eval import evaluate
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device ='cpu'
 
 def train(train_iter, test_iter, model, criterion, optimizer, config, ts):
     """
@@ -33,12 +33,16 @@ def train(train_iter, test_iter, model, criterion, optimizer, config, ts):
     train_loss = 0.0
     for epoch in tqdm(range(config.training.num_epochs), unit="epoch"):
         for i, batch in tqdm(enumerate(train_iter), total=len(train_iter), unit="batch"):
-            model.train()
+            # model.train()
             optimizer.zero_grad()
 
             feature, y_hist, target = batch
             output = model(feature.to(device), y_hist.to(device))
+            # print('y_hist:{};\n target:{};\n output:{}'.format(y_hist,target,output))
+            print('output:{}'.format(output))
+            # print(output.size(),target.size())
             loss = criterion(output.to(device), target.to(device))
+            # print('batch:{} loss:{}'.format(i,loss))
 
             if config.training.reg1:
                 params = torch.cat([p.view(-1) for name, p in model.named_parameters() if "bias" not in name])

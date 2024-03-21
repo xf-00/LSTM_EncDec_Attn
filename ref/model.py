@@ -2,10 +2,10 @@ import numpy as np
 import torch
 from torch import nn
 from torch.autograd import Variable
-from torch.nn import functional as tf
+from torch.nn import functional as F
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 
 def init_hidden(x: torch.Tensor, hidden_size: int, num_dir: int = 1, xavier: bool = True):
     """
@@ -18,8 +18,8 @@ def init_hidden(x: torch.Tensor, hidden_size: int, num_dir: int = 1, xavier: boo
         xavier: (bool): wether or not use xavier initialization
     """
     if xavier:
-        return nn.init.xavier_normal_(torch.zeros(num_dir, x.size(0), hidden_size)).to(device)
-    return Variable(torch.zeros(num_dir, x.size(0), hidden_size)).to(device)
+        return nn.init.xavier_normal_(torch.randn(num_dir, x.size(0), hidden_size)).to(device)
+    return Variable(torch.randn(num_dir, x.size(0), hidden_size)).to(device)
 
 
 ###########################################################################
@@ -50,11 +50,15 @@ class Encoder(nn.Module):
         """
         h_t, c_t = (init_hidden(input_data, self.hidden_size),
                     init_hidden(input_data, self.hidden_size))
+
         input_encoded = Variable(torch.zeros(input_data.size(0), self.seq_len, self.hidden_size))
 
         for t in range(self.seq_len):
+            print('input_data size:{},details:{}'.format(input_data.size(),input_data))
             _, (h_t, c_t) = self.lstm(input_data[:, t, :].unsqueeze(0), (h_t, c_t))
             input_encoded[:, t, :] = h_t
+        print('input encoded size:{}'.format(input_encoded.size()))
+        print('encode_input encoded:{}'.format(input_encoded))
         return _, input_encoded
 
 
@@ -84,20 +88,20 @@ class AttnEncoder(nn.Module):
         )
         self.softmax = nn.Softmax(dim=1)
 
-    def _get_noise(self, input_data: torch.Tensor, sigma=0.01, p=0.1):
-        """
-        Get noise.
-
-        Args:
-            input_data: (torch.Tensor): tensor of input data
-            sigma: (float): variance of the generated noise
-            p: (float): probability to add noise
-        """
-        normal = sigma * torch.randn(input_data.shape)
-        mask = np.random.uniform(size=(input_data.shape))
-        mask = (mask < p).astype(int)
-        noise = normal * torch.tensor(mask)
-        return noise
+    # def _get_noise(self, input_data: torch.Tensor, sigma=0.01, p=0.1):
+    #     """
+    #     Get noise.
+    #
+    #     Args:
+    #         input_data: (torch.Tensor): tensor of input data
+    #         sigma: (float): variance of the generated noise
+    #         p: (float): probability to add noise
+    #     """
+    #     normal = sigma * torch.randn(input_data.shape)
+    #     mask = np.random.uniform(size=(input_data.shape))
+    #     mask = (mask < p).astype(int)
+    #     noise = normal * torch.tensor(mask)
+    #     return noise
 
     def forward(self, input_data: torch.Tensor):
         """
@@ -106,22 +110,23 @@ class AttnEncoder(nn.Module):
         Args:
             input_data: (torch.Tensor): tensor of input data
         """
+
         h_t, c_t = (init_hidden(input_data, self.hidden_size, num_dir=self.directions),
                     init_hidden(input_data, self.hidden_size, num_dir=self.directions))
-
         attentions, input_encoded = (Variable(torch.zeros(input_data.size(0), self.seq_len, self.input_size)),
                                      Variable(torch.zeros(input_data.size(0), self.seq_len, self.hidden_size)))
 
         if self.add_noise and self.training:
             input_data += self._get_noise(input_data).to(device)
-
+        # print('h_t size:{}, y_hist size:{}'.format(type(feature), type(y_hist)))
         for t in range(self.seq_len):
             x = torch.cat((h_t.repeat(self.input_size, 1, 1).permute(1, 0, 2),
                            c_t.repeat(self.input_size, 1, 1).permute(1, 0, 2),
                            input_data.permute(0, 2, 1).to(device)), dim=2).to(
                 device)  # bs * input_size * (2 * hidden_dim + seq_len)
-
+            # pass
             e_t = self.attn(x.view(-1, self.hidden_size * 2 + self.seq_len))  # (bs * input_size) * 1
+            print('e_t size:{}'.format(e_t.size()))
             a_t = self.softmax(e_t.view(-1, self.input_size)).to(device)  # (bs, input_size)
 
             weighted_input = torch.mul(a_t, input_data[:, t, :].to(device))  # (bs * input_size)
@@ -210,7 +215,7 @@ class AttnDecoder(nn.Module):
                            c_t.repeat(self.seq_len, 1, 1).permute(1, 0, 2),
                            input_encoded.to(device)), dim=2)
 
-            x = tf.softmax(
+            x = F.softmax(
                 self.attn(
                     x.view(-1, 2 * self.decoder_hidden_size + self.encoder_hidden_size)
                 ).view(-1, self.seq_len),
@@ -223,6 +228,7 @@ class AttnDecoder(nn.Module):
 
             self.lstm.flatten_parameters()
             _, (h_t, c_t) = self.lstm(y_tilde.unsqueeze(0), (h_t, c_t))
+        print('h_t:{}'.format(h_t[0]))
 
         return self.fc_out(torch.cat((h_t[0], context.to(device)), dim=1))  # predicting value at t=self.seq_length+1
 
@@ -250,6 +256,7 @@ class AutoEncForecast(nn.Module):
             y_hist: (torch.Tensor): shifted target
             return_attention: (bool): whether or not to return the attention
         """
+
         attentions, encoder_output = self.encoder(encoder_input)
         outputs = self.decoder(encoder_output, y_hist.float())
 

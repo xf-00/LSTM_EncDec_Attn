@@ -6,8 +6,8 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 
 def evaluate(test_iter, criterion, model, config, ts):
     """
@@ -27,8 +27,9 @@ def evaluate(test_iter, criterion, model, config, ts):
         with torch.no_grad():
             feature, y_hist, target = batch
             output, att = model(feature.to(device), y_hist.to(device), return_attention=True)
-
+            # print(output)
             loss = criterion(output.to(device), target.to(device)).item()
+            # print(loss)
             if config.training.reg1:
                 params = torch.cat([p.view(-1) for name, p in model.named_parameters() if 'bias' not in name])
                 loss += config.training.reg_factor1 * torch.norm(params, 1)
