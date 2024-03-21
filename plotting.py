@@ -29,37 +29,37 @@ def plot_train_test_results(lstm_model, Xtrain, Ytrain, Xtest, Ytest, num_rows =
   fig, ax = plt.subplots(num_rows, num_cols, figsize = (13, 15))
   
   # plot training/test predictions
-  for ii in range(num_rows):
+  for i in range(num_rows):
       # train set
-      X_train_plt = Xtrain[:, ii, :]
+      X_train_plt = Xtrain[:, i, :]
       Y_train_pred = lstm_model.predict(torch.from_numpy(X_train_plt).type(torch.Tensor), target_len = ow)
 
-      ax[ii, 0].plot(np.arange(0, iw), Xtrain[:, ii, 0], 'k', linewidth = 2, label = 'Input')
-      ax[ii, 0].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtrain[-1, ii, 0]], Ytrain[:, ii, 0]]),
+      ax[i, 0].plot(np.arange(0, iw), Xtrain[:, i, 0], 'k', linewidth = 2, label = 'Input')
+      ax[i, 0].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtrain[-1, i, 0]], Ytrain[:, i, 0]]),
                      color = (0.2, 0.42, 0.72), linewidth = 2, label = 'Target')
-      ax[ii, 0].plot(np.arange(iw - 1, iw + ow),  np.concatenate([[Xtrain[-1, ii, 0]], Y_train_pred[:, 0]]),
+      ax[i, 0].plot(np.arange(iw - 1, iw + ow),  np.concatenate([[Xtrain[-1, i, 0]], Y_train_pred[:, 0]]),
                      color = (0.76, 0.01, 0.01), linewidth = 2, label = 'Prediction')
-      ax[ii, 0].set_xlim([0, iw + ow - 1])
-      ax[ii, 0].set_xlabel('$t$')
-      ax[ii, 0].set_ylabel('$y$')
+      ax[i, 0].set_xlim([0, iw + ow - 1])
+      ax[i, 0].set_xlabel('$t$')
+      ax[i, 0].set_ylabel('$y$')
 
       # test set
-      X_test_plt = Xtest[:, ii, :]
+      X_test_plt = Xtest[:, i, :]
       Y_test_pred = lstm_model.predict(torch.from_numpy(X_test_plt).type(torch.Tensor), target_len = ow)
-      ax[ii, 1].plot(np.arange(0, iw), Xtest[:, ii, 0], 'k', linewidth = 2, label = 'Input')
-      ax[ii, 1].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtest[-1, ii, 0]], Ytest[:, ii, 0]]),
+      ax[i, 1].plot(np.arange(0, iw), Xtest[:, i, 0], 'k', linewidth = 2, label = 'Input')
+      ax[i, 1].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtest[-1, i, 0]], Ytest[:, i, 0]]),
                      color = (0.2, 0.42, 0.72), linewidth = 2, label = 'Target')
-      ax[ii, 1].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtest[-1, ii, 0]], Y_test_pred[:, 0]]),
+      ax[i, 1].plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtest[-1, i, 0]], Y_test_pred[:, 0]]),
                      color = (0.76, 0.01, 0.01), linewidth = 2, label = 'Prediction')
-      ax[ii, 1].set_xlim([0, iw + ow - 1])
-      ax[ii, 1].set_xlabel('$t$')
-      ax[ii, 1].set_ylabel('$y$')
+      ax[i, 1].set_xlim([0, iw + ow - 1])
+      ax[i, 1].set_xlabel('$t$')
+      ax[i, 1].set_ylabel('$y$')
 
-      if ii == 0:
-        ax[ii, 0].set_title('Train')
+      if i == 0:
+        ax[i, 0].set_title('Train')
         
-        ax[ii, 1].legend(bbox_to_anchor=(1, 1))
-        ax[ii, 1].set_title('Test')
+        ax[i, 1].legend(bbox_to_anchor=(1, 1))
+        ax[i, 1].set_title('Test')
 
   plt.suptitle('LSTM Encoder-Decoder Predictions', x = 0.445, y = 1.)
   plt.tight_layout()
@@ -68,3 +68,35 @@ def plot_train_test_results(lstm_model, Xtrain, Ytrain, Xtest, Ytest, num_rows =
   plt.close() 
       
   return 
+
+
+
+def plot_loss_curves(model, results: dict[str, list[float]], window_size, lr, epoch, num_hiddens):
+    """
+    参数:
+        results (dict): 包含值列表的字典，例如：
+            {"train_loss": [...],
+             "test_loss": [...],
+    """
+
+    loss = results['train_loss']
+    test_loss = results['test_loss']
+
+    # 确定有多少个 epoch
+    epochs = range(len(results['train_loss']))
+
+    # 设置绘图
+    plt.figure(figsize=(15, 7))
+
+    # 绘制损失曲线
+    plt.plot(epochs, loss, label='train_loss')
+    plt.plot(epochs, test_loss, label='test_loss')
+    plt.title('损失', fontsize=18)
+    plt.xlabel('Epochs', fontsize=18)
+    plt.legend(fontsize=16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.savefig(
+        f'./od_pred/figures/feature-3_lstm_epoch{epoch}_numhidden{num_hiddens}_windowsize{window_size}_lr{lr}_train0.6.png',
+        dpi=300)
+    plt.show()
