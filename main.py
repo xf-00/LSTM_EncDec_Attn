@@ -7,6 +7,7 @@ import generate_dataset
 import plotting
 from model.rnn import RNNNet
 from model.lstm import LSTMNet
+from model.enc_dec import ALSeq2Seq
 import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
@@ -69,7 +70,7 @@ plt.savefig('plots/windowed_data.png')
 X_train, Y_train, X_test, Y_test = generate_dataset.numpy_to_torch(Xtrain, Ytrain, Xtest, Ytest)
 
 # specify model parameters and train
-model = lstm_encoder_decoder.lstm_seq2seq(input_size=X_train.shape[2], hidden_size=15)
+model = ALSeq2Seq(input_size=X_train.shape[2], hidden_size=15)
 loss = model.train_model(X_train, Y_train, n_epochs=50, target_len=ow, batch_size=5,
                          training_prediction='mixed_teacher_forcing', teacher_forcing_ratio=0.6, learning_rate=0.01,
                          dynamic_tf=False)

@@ -122,7 +122,7 @@ class Decoder(nn.Module):
         return self.fc_out(torch.cat((h_t[0], context.to(device)), dim=1))  # predicting value at t=self.seq_length+1
 
 
-class AutoEncForecast(nn.Module):
+class ALSeq2Seq(nn.Module):
     def __init__(self, config, input_size):
         """
         Initialize the network.
@@ -131,8 +131,8 @@ class AutoEncForecast(nn.Module):
             config:
             input_size: (int): size of the input
         """
-        super(AutoEncForecast, self).__init__()
-        self.encoder = Encoder().to(device)
+        super(ALSeq2Seq, self).__init__()
+        self.encoder = Encoder(input_size, hidden_size_enc, num_layers_enc, seq_len).to(device)
         self.decoder = Decoder().to(device)
 
     def forward(self, encoder_input: torch.Tensor, y_hist: torch.Tensor, return_attention: bool = False):
