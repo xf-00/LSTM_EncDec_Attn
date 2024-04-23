@@ -35,15 +35,13 @@ def dataset(t_col: int, window_size, train_scale, scaler):
             y.append(data.counts[i + window_size])
         return np.array(X), np.array(y)
 
-    # 数据预处理
     train_size = int(len(df_ts) * train_scale)
     train, test = df_ts.iloc[:train_size].reset_index(drop=True), df_ts.iloc[train_size:].reset_index(drop=True)
     _, test_origin_y = create_time_series_data(test[targetcolumns], window_size)
-    # 归一化
+    # norm
     # train['counts'] = scaler.fit_transform(train[targetcolumns].values.reshape(-1, 1))
     # test['counts'] = scaler.fit_transform(test[targetcolumns].values.reshape(-1, 1))
 
-    # 划分训练集和测试集
     train_X, train_Y = create_time_series_data(train[targetcolumns], window_size)  # 注意修改 是否标准化有区别
     test_X, test_Y = create_time_series_data(test[targetcolumns], window_size)
     # print(train_X.shape)

@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
-
 from sklearn.preprocessing import MinMaxScaler
-
-import generate_dataset
+import create_dataset
 import plotting
 from model.rnn import RNNNet
 from model.lstm import LSTMNet
@@ -12,58 +10,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 from timeit import default_timer as timer
 import matplotlib
+import os
 
 
 plt.rcParams['font.family'] = 'simhei'
 matplotlib.rcParams.update({'font.size': 17})
-# generate/ read data
 
-# t- index of time series; y- time series
-t, y = generate_dataset.synthetic_data()
-t_train, y_train, t_test, y_test = generate_dataset.train_test_split(t, y, split=0.8)
-
-# plot time series
-plt.figure(figsize=(18, 6))
-plt.plot(t, y, color='k', linewidth=2)
-plt.xlim([t[0], t[-1]])
-plt.xlabel('$t$')
-plt.ylabel('$y$')
-plt.title('Synthetic Time Series')
-plt.savefig('./plots/synthetic_time_series.png')
-
-# plot time series
-plt.figure(figsize=(18, 6))
-plt.plot(t, y, color='k', linewidth=2)
-plt.xlim([t[0], t[-1]])
-plt.xlabel('$t$')
-plt.ylabel('$y$')
-plt.title('Synthetic Time Series')
-plt.savefig('plots/synthetic_time_series.png')
-
-# window dataset
-
-# set size of input/output windows
-iw = 3
+data_dir = 'D:/CTIT-Synology/我的文件/SynologyDrive/CTIT-项目/横向项目/大型城市综合体/od_data_processed/'
+filenames = os.listdir(data_dir)
+print(filenames)
+iw = 5
 ow = 1
-s = 1
-
-# generate windowed training/test datasets
-Xtrain, Ytrain = generate_dataset.windowed_dataset(y_train, input_window=iw, output_window=ow, stride=s)
-Xtest, Ytest = generate_dataset.windowed_dataset(y_test, input_window=iw, output_window=ow, stride=s)
+x_train, y_train, x_test, y_test = create_dataset.dataset(filenames[0], split_ratio=0.8)
 
 # plot example of windowed data
 plt.figure(figsize=(10, 6))
-plt.plot(np.arange(0, iw), Xtrain[:, 0, 0], 'k', linewidth=2.2, label='Input')
-plt.plot(np.arange(iw - 1, iw + ow), np.concatenate([[Xtrain[-1, 0, 0]], Ytrain[:, 0, 0]]),
-         color=(0.2, 0.42, 0.72), linewidth=2.2, label='Target')
-plt.xlim([0, iw + ow - 1])
+plt.plot(np.arange(0, len(x_train)), x_train[:, :, 0], 'k', linewidth=2.2, label='Input')
+
+
 plt.xlabel(r'$t$')
 plt.ylabel(r'$y$')
 plt.title('Example of Windowed Training Data')
 plt.legend(bbox_to_anchor=(1.3, 1))
 plt.tight_layout()
-plt.savefig('plots/windowed_data.png')
-
+# plt.savefig('plots/windowed_data.png')
+plt.show()
 # LSTM encoder-decoder
 
 # convert windowed data from np.array to PyTorch tensor

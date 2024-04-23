@@ -61,7 +61,6 @@ def test_loop(model, x, y, loss_func, batch_size, device, hidden_state):
     return test_loss, np.array(prediction_y)
 
 
-# 梯度裁剪
 def grad_clipping(params, theta, device):
     norm = torch.tensor([0.0], device=device)
     for param in params:
