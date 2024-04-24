@@ -22,23 +22,8 @@ print(filenames)
 iw = 5
 ow = 1
 x_train, y_train, x_test, y_test = create_dataset.dataset(filenames[0], split_ratio=0.8)
-
-# plot example of windowed data
-plt.figure(figsize=(10, 6))
-plt.plot(np.arange(0, len(x_train)), x_train[:, :, 0], 'k', linewidth=2.2, label='Input')
-
-
-plt.xlabel(r'$t$')
-plt.ylabel(r'$y$')
-plt.title('Example of Windowed Training Data')
-plt.legend(bbox_to_anchor=(1.3, 1))
-plt.tight_layout()
-# plt.savefig('plots/windowed_data.png')
-plt.show()
-# LSTM encoder-decoder
-
 # convert windowed data from np.array to PyTorch tensor
-X_train, Y_train, X_test, Y_test = generate_dataset.numpy_to_torch(Xtrain, Ytrain, Xtest, Ytest)
+x_train, y_train, x_test, y_test = create_dataset.numpy_to_torch(x_train, y_train, x_test, y_test)
 
 # specify model parameters and train
 model = ALSeq2Seq(input_size=X_train.shape[2], hidden_size=15)
@@ -47,7 +32,7 @@ loss = model.train_model(X_train, Y_train, n_epochs=50, target_len=ow, batch_siz
                          dynamic_tf=False)
 
 # plot predictions on train/test data
-plotting.plot_train_test_results(model, Xtrain, Ytrain, Xtest, Ytest)
+plotting.plot_train_test_results(model, x_train, y_train, x_test, y_test)
 plt.close('all')
 
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-import os
+import torch
+
 
 data_dir = 'D:/CTIT-Synology/我的文件/SynologyDrive/CTIT-项目/横向项目/大型城市综合体/od_data_processed/'
 
@@ -40,3 +41,14 @@ def dataset(file_name, split_ratio):
     x_train, y_train = window_data(train_data)
     x_test, y_test = window_data(test_data)
     return x_train, y_train, x_test, y_test
+
+
+def numpy_to_torch(Xtrain, Ytrain, Xtest, Ytest):
+
+    X_train_torch = torch.from_numpy(Xtrain).type(torch.Tensor)
+    Y_train_torch = torch.from_numpy(Ytrain).type(torch.Tensor)
+
+    X_test_torch = torch.from_numpy(Xtest).type(torch.Tensor)
+    Y_test_torch = torch.from_numpy(Ytest).type(torch.Tensor)
+
+    return X_train_torch, Y_train_torch, X_test_torch, Y_test_torch
