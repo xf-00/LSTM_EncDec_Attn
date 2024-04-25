@@ -22,12 +22,10 @@ print(filenames)
 iw = 5
 ow = 1
 x_train, y_train, x_test, y_test = create_dataset.dataset(filenames[0], split_ratio=0.8)
-# convert windowed data from np.array to PyTorch tensor
-x_train, y_train, x_test, y_test = create_dataset.numpy_to_torch(x_train, y_train, x_test, y_test)
 
 # specify model parameters and train
-model = ALSeq2Seq(input_size=X_train.shape[2], hidden_size=15)
-loss = model.train_model(X_train, Y_train, n_epochs=50, target_len=ow, batch_size=5,
+model = ALSeq2Seq(input_size=x_train.shape[2], hidden_size=15)
+loss = model.train_model(x_train, y_train, n_epochs=50, target_len=ow, batch_size=5,
                          training_prediction='mixed_teacher_forcing', teacher_forcing_ratio=0.6, learning_rate=0.01,
                          dynamic_tf=False)
 

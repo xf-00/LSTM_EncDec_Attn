@@ -28,28 +28,15 @@ Encoder
 
 class Encoder(nn.Module):
     def __init__(self, input_size: int, hidden_size_enc: int, num_layers_enc: int, seq_len: int):
-        """
-        Initialize the model.
-
-        Args:
-            config:
-            input_size: (int): size of the input(feature size)
-            seq_len: (int) : window size
-        """
         super(Encoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size_enc
         self.num_layers = num_layers_enc
         self.seq_len = seq_len
-        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers)
+        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers,
+                            batch_first=True)
 
     def forward(self, input_data: torch.Tensor):
-        """
-        Run forward computation.
-
-        Args:
-            input_data: (torch.Tensor): tensor of input daa
-        """
         h_t, c_t = (init_hidden(input_data, self.hidden_size),
                     init_hidden(input_data, self.hidden_size))
 
@@ -57,21 +44,15 @@ class Encoder(nn.Module):
 
         for t in range(self.seq_len):
             print('input_data size:{},details:{}'.format(input_data.size(), input_data))
-            _, (h_t, c_t) = self.lstm(input_data[:, t, :].unsqueeze(0), (h_t, c_t))
-            input_encoded[:, t, :] = h_t
+            output, (h_t, c_t) = self.lstm(input_data[:, t, :].unsqueeze(0), (h_t, c_t))
+            input_encoded[:, t, :] = output[:, t, :]  # last layer h_t
 
-        return _, input_encoded
+        return output, input_encoded
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_size: int, hidden_size_enc: int, hidden_size_dec: int, num_layers_dec: int, seq_len: int,
+    def __init__(self, hidden_size_enc: int, hidden_size_dec: int, num_layers_dec: int, seq_len: int,
                  output_size: int):
-        """
-        Initialize the network.
-
-        Args:
-            config:
-        """
         super(Decoder, self).__init__()
         self.seq_len = seq_len
         self.encoder_hidden_size = hidden_size_enc
@@ -81,7 +62,7 @@ class Decoder(nn.Module):
         self.attn = nn.Sequential(
             nn.Linear(2 * self.decoder_hidden_size + self.encoder_hidden_size, self.encoder_hidden_size),
             nn.Tanh(),
-            nn.Linear(self.encoder_hidden_size, 1)
+            nn.Linear(self.encoder_hidden_size, 3)
         )
         self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers)
         self.fc = nn.Linear(self.encoder_hidden_size + self.out_feats, self.out_feats)
@@ -123,7 +104,7 @@ class Decoder(nn.Module):
 
 
 class ALSeq2Seq(nn.Module):
-    def __init__(self, config, input_size):
+    def __init__(self, input_size, hidden_size_enc, num_layers_enc, seq_len):
         """
         Initialize the network.
 
