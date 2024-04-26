@@ -58,13 +58,15 @@ class Decoder(nn.Module):
         self.encoder_hidden_size = hidden_size_enc
         self.decoder_hidden_size = hidden_size_dec
         self.out_feats = output_size
+        self.num_layers = num_layers_dec
 
         self.attn = nn.Sequential(
             nn.Linear(2 * self.decoder_hidden_size + self.encoder_hidden_size, self.encoder_hidden_size),
             nn.Tanh(),
             nn.Linear(self.encoder_hidden_size, 3)
         )
-        self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers)
+        self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers,
+                            batch_first=True)
         self.fc = nn.Linear(self.encoder_hidden_size + self.out_feats, self.out_feats)
         self.fc_out = nn.Linear(self.decoder_hidden_size + self.encoder_hidden_size, self.out_feats)
         self.fc.weight.data.normal_()
@@ -74,7 +76,7 @@ class Decoder(nn.Module):
         Perform forward computation.
 
         Args:
-            input_encoded: (torch.Tensor): tensor of encoded input
+            input_encoded: (torch.Tensor): tensor of encoded input,  [batch_size, seq_len, hidden_size]
             y_history: (torch.Tensor): shifted target
         """
         h_t, c_t = (
@@ -104,26 +106,23 @@ class Decoder(nn.Module):
 
 
 class ALSeq2Seq(nn.Module):
-    def __init__(self, input_size, hidden_size_enc, num_layers_enc, seq_len):
+    def __init__(self, input_size, hidden_size_enc, num_layers_enc, seq_len, hidden_size_dec, num_layers_dec,
+                 output_size):
         """
         Initialize the network.
 
-        Args:
-            config:
-            input_size: (int): size of the input
         """
         super(ALSeq2Seq, self).__init__()
         self.encoder = Encoder(input_size, hidden_size_enc, num_layers_enc, seq_len).to(device)
-        self.decoder = Decoder().to(device)
+        self.decoder = Decoder(hidden_size_enc, hidden_size_dec, num_layers_dec, seq_len, output_size).to(device)
 
-    def forward(self, encoder_input: torch.Tensor, y_hist: torch.Tensor, return_attention: bool = False):
+    def forward(self, encoder_input: torch.Tensor, y_hist: torch.Tensor):
         """
         Forward computation. encoder_input_inputs.
 
         Args:
             encoder_input: (torch.Tensor): tensor of input data
             y_hist: (torch.Tensor): shifted target
-            return_attention: (bool): whether or not to return the attention
         """
 
         _, encoder_output = self.encoder(encoder_input)
