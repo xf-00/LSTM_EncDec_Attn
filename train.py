@@ -18,15 +18,16 @@ def train_loop(model, x, y, optimizer, loss_func, batch_size, hidden_state, clip
         train_x_data = torch.tensor(train_X[itr * batch_size:(itr + 1) * batch_size, :, :], dtype=torch.float).reshape(
             batch_size, train_X.shape[1], train_X.shape[-1]).to(device)
         train_y_data = torch.tensor(train_Y[itr * batch_size:(itr + 1) * batch_size], dtype=torch.float).to(device)
-        if hidden_state is not None:
-            # 使用detach函数从计算图分离隐藏状态, 这是为了
-            # 使模型参数的梯度计算只依赖一次迭代读取的小批量序列(防止梯度计算开销太大)
-            if isinstance(hidden_state, tuple):  # LSTM, state:(h, c)
-                hidden_state = (hidden_state[0].detach(), hidden_state[1].detach())
-            else:
-                hidden_state = hidden_state.detach()
+        # if hidden_state is not None:
+        #     # 使用detach函数从计算图分离隐藏状态, 这是为了
+        #     # 使模型参数的梯度计算只依赖一次迭代读取的小批量序列(防止梯度计算开销太大)
+        #     if isinstance(hidden_state, tuple):  # LSTM, state:(h, c)
+        #         hidden_state = (hidden_state[0].detach(), hidden_state[1].detach())
+        #     else:
+        #         hidden_state = hidden_state.detach()
 
-        predicts_y, hidden_state = model(train_x_data, hidden_state)
+        # predicts_y, hidden_state = model(train_x_data, hidden_state)
+        predicts_y = model(train_x_data, train_y_data)
 
         loss = loss_func(predicts_y, train_y_data)
         train_loss += loss.item()

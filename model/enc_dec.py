@@ -4,6 +4,7 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
 
 
 def init_hidden(x: torch.Tensor, hidden_size: int, num_dir: int = 1, xavier: bool = True):
@@ -17,8 +18,9 @@ def init_hidden(x: torch.Tensor, hidden_size: int, num_dir: int = 1, xavier: boo
         xavier: (bool): wether or not use xavier initialization
     """
     if xavier:
-        return nn.init.xavier_normal_(torch.randn(num_dir, x.size(0), hidden_size)).to(device)
-    return Variable(torch.randn(num_dir, x.size(0), hidden_size)).to(device)
+        return nn.init.xavier_normal_(torch.randn(num_dir * 2, x.size(0), hidden_size)).to(device)
+    return Variable(torch.randn(num_dir * 2, x.size(0), hidden_size)).to(
+        device)  # num_layers * num_directions,max_batch_size, real_hidden_size
 
 
 """
@@ -42,10 +44,13 @@ class Encoder(nn.Module):
 
         input_encoded = Variable(torch.zeros(input_data.size(0), self.seq_len, self.hidden_size))
 
-        for t in range(self.seq_len):
-            print('input_data size:{},details:{}'.format(input_data.size(), input_data))
-            output, (h_t, c_t) = self.lstm(input_data[:, t, :].unsqueeze(0), (h_t, c_t))
-            input_encoded[:, t, :] = output[:, t, :]  # last layer h_t
+        # for t in range(self.seq_len):
+        #     print('input_data size:{},details:{}'.format(input_data.size(), input_data))
+        #     output, (h_t, c_t) = self.lstm(input_data[:, t, :].unsqueeze(0), (h_t, c_t))
+        #     input_encoded[:, t, :] = output[:, t, :]  # last layer h_t
+
+        output, (h_t, c_t) = self.lstm(input_data, (h_t, c_t))
+        input_encoded = output  # last layer h_t
 
         return output, input_encoded
 
@@ -63,7 +68,7 @@ class Decoder(nn.Module):
         self.attn = nn.Sequential(
             nn.Linear(2 * self.decoder_hidden_size + self.encoder_hidden_size, self.encoder_hidden_size),
             nn.Tanh(),
-            nn.Linear(self.encoder_hidden_size, 3)
+            nn.Linear(self.encoder_hidden_size, 1)
         )
         self.lstm = nn.LSTM(input_size=self.out_feats, hidden_size=self.decoder_hidden_size, num_layers=self.num_layers,
                             batch_first=True)
