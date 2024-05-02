@@ -87,7 +87,7 @@ class Decoder(nn.Module):
         h_t, c_t = (
             init_hidden(input_encoded, self.decoder_hidden_size), init_hidden(input_encoded, self.decoder_hidden_size))
         context = Variable(torch.zeros(input_encoded.size(0), self.encoder_hidden_size))
-
+    # bugs in this part
         for t in range(self.seq_len):
             x = torch.cat((h_t.repeat(self.seq_len, 1, 1).permute(1, 0, 2),
                            c_t.repeat(self.seq_len, 1, 1).permute(1, 0, 2),
